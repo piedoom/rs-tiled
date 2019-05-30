@@ -17,7 +17,7 @@ path = "src/lib.rs"
 
 [features]
 default = []
-serde = ["serde-crate"]
+amethyst = ["amethyst_assets", "amethyst_error", "specs"]
 
 [[example]]
 name = "example"
@@ -27,4 +27,6 @@ path = "examples/main.rs"
 base64  = "0.5.2"
 xml-rs  = "0.3.0"
 libflate = "0.1.18"
-serde-crate = { version = "*", optional = true, package = "serde" }
+amethyst_assets = {package = "amethyst_assets", git = "https://github.com/amethyst/amethyst", optional = true}
+amethyst_error = {package = "amethyst_error", git = "https://github.com/amethyst/amethyst", optional = true}
+specs = {version = "*", optional = true}

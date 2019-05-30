@@ -15,6 +15,12 @@ use std::{
 };
 use xml::{attribute::OwnedAttribute, reader::XmlEvent, EventReader};
 
+#[cfg(feature = "amethyst")]
+use specs::storage::{VecStorage, UnprotectedStorage};
+#[cfg(feature = "amethyst")]
+use amethyst_assets::{Asset, ProcessingState, Handle};
+
+
 /// All Tiled files will be parsed into this. Holds all the layers and tilesets
 #[derive(Debug, PartialEq, Clone)]
 pub struct Map {
@@ -31,6 +37,28 @@ pub struct Map {
     pub properties: Properties,
     pub background_color: Option<Color>,
 }
+
+impl Default for Map {
+    fn default() -> Self {
+        Self {
+            version: String::new(),
+            orientation: Orientation::Orthogonal,
+            width: 0,
+            height: 0,
+            tile_width: 0,
+            tile_height: 0,
+            tilesets: vec![],
+            layers: vec![],
+            image_layers: vec![],
+            object_groups: vec![],
+            properties: Properties::with_capacity(0),
+            background_color: None,
+        }
+    }
+}
+
+unsafe impl Send for Map {}
+unsafe impl Sync for Map {}
 
 impl Map {
     fn new<R: Read>(
@@ -117,7 +145,7 @@ impl Map {
     /// Parse a buffer hopefully containing the contents of a Tiled file and try to
     /// parse it.
     pub fn parse<R: Read>(reader: R) -> Result<Map, Error> {
-        parse_impl(reader, None)
+        Self::parse_impl(reader, None)
     }
 
     /// Parse a file hopefully containing a Tiled map and try to parse it.  If the
@@ -126,7 +154,7 @@ impl Map {
     pub fn parse_file(path: &Path) -> Result<Map, Error> {
         let file = File::open(path)
             .map_err(|_| Error::Other(format!("Map file not found: {:?}", path)))?;
-        parse_impl(file, Some(path))
+        Self::parse_impl(file, Some(path))
     }
 
     /// Parse a buffer hopefully containing the contents of a Tiled file and try to
@@ -134,29 +162,46 @@ impl Map {
     /// (e.g. Amethyst) simply hand over a byte stream (and file location) for parsing,
     /// in which case this function may be required.
     pub fn parse_with_path<R: Read>(reader: R, path: &Path) -> Result<Map, Error> {
-        parse_impl(reader, Some(path))
+        Self::parse_impl(reader, Some(path))
     }
-}
 
-#[cfg(feature = "serde")]
-impl<'de> Deserialize<'de> for Map {
-    /// Implement a deserializer so this can be used in contexts where deserialization is needed
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        if deserializer.is_human_readable() {
-            // Deserialize from a human-readable string like "2015-05-15T17:01:00Z".
-            let s = String::deserialize(deserializer)?;
-            Timestamp::from_str(&s).map_err(de::Error::custom)
-        } else {
-            // Deserialize from a compact binary representation, seconds since
-            // the Unix epoch.
-            let n = u64::deserialize(deserializer)?;
-            Ok(Timestamp::EPOCH + Duration::seconds(n))
+    fn parse_impl<R: Read>(reader: R, map_path: Option<&Path>) -> Result<Map, Error> {
+        let mut parser = EventReader::new(reader);
+        loop {
+            match parser.next().map_err(Error::XmlDecodingError)? {
+                XmlEvent::StartElement {
+                    name, attributes, ..
+                } => {
+                    if name.local_name == "map" {
+                        return Map::new(&mut parser, attributes, map_path);
+                    }
+                }
+                XmlEvent::EndDocument => {
+                    return Err(Error::PrematureEnd(
+                        "Document ended before map was parsed".to_string(),
+                    ))
+                }
+                _ => {}
+            }
         }
     }
 }
+
+#[cfg(feature = "amethyst")]
+impl Asset for Map {
+    const NAME: &'static str = "tiled::Map";
+    type Data = Self;
+    type HandleStorage = VecStorage<Handle<Self>>;
+}
+
+#[cfg(feature = "amethyst")]
+impl From<Map> for Result<ProcessingState<Map>, amethyst_error::Error> {
+    fn from(map: Map)
+        -> Result<ProcessingState<Map>, amethyst_error::Error> {
+            Ok(ProcessingState::Loaded(Map::default()))
+    }
+}
+
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum Orientation {
@@ -310,25 +355,4 @@ fn convert_to_u32(all: &Vec<u8>, width: u32) -> Vec<Vec<u32>> {
         data.push(row);
     }
     data
-}
-
-fn parse_impl<R: Read>(reader: R, map_path: Option<&Path>) -> Result<Map, Error> {
-    let mut parser = EventReader::new(reader);
-    loop {
-        match parser.next().map_err(Error::XmlDecodingError)? {
-            XmlEvent::StartElement {
-                name, attributes, ..
-            } => {
-                if name.local_name == "map" {
-                    return Map::new(&mut parser, attributes, map_path);
-                }
-            }
-            XmlEvent::EndDocument => {
-                return Err(Error::PrematureEnd(
-                    "Document ended before map was parsed".to_string(),
-                ))
-            }
-            _ => {}
-        }
-    }
 }

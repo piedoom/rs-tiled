@@ -1,9 +1,6 @@
 extern crate base64;
 extern crate libflate;
 extern crate xml;
-#[cfg(feature = "serde")]
-use serde::de::{self, Deserialize, Deserializer};
-
 mod color;
 mod error;
 mod image;
@@ -15,6 +12,8 @@ pub mod object;
 mod property;
 mod tile;
 mod tileset;
+#[cfg(feature = "amethyst")]
+mod amethyst;
 
 pub use self::{
     color::Color,
@@ -26,3 +25,6 @@ pub use self::{
     tile::{Frame, Tile},
     tileset::Tileset,
 };
+
+#[cfg(feature = "amethyst")]
+pub use amethyst::TmxFormat;
