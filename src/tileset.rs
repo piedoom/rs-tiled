@@ -103,7 +103,7 @@ impl Tileset {
                     name, attributes, ..
                 } => {
                     if name.local_name == "tileset" {
-                        return Tileset::parse_external_tileset(
+                        return Tileset::parse_external(
                             first_gid,
                             &mut tileset_parser,
                             &attributes,
@@ -120,7 +120,7 @@ impl Tileset {
         }
     }
 
-    fn parse_external_tileset<R: Read>(
+    fn parse_external<R: Read>(
         first_gid: u32,
         parser: &mut EventReader<R>,
         attrs: &Vec<OwnedAttribute>,
@@ -169,7 +169,7 @@ impl Tileset {
     /// External tilesets do not have a firstgid attribute.  That lives in the
     /// map. You must pass in `first_gid`.  If you do not need to use gids for anything,
     /// passing in 1 will work fine.
-    pub fn parse_tileset<R: Read>(reader: R, first_gid: u32) -> Result<Tileset, Error> {
+    pub fn parse<R: Read>(reader: R, first_gid: u32) -> Result<Tileset, Error> {
         Tileset::new_external(reader, first_gid)
     }
 }
