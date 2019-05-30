@@ -8,12 +8,16 @@ repository = "https://github.com/mattyhall/rs-tiled.git"
 readme = "README.md"
 license = "MIT"
 authors = ["Matthew Hall <matthew@quickbeam.me.uk>"]
-
+edition = "2018"
 keywords = ["tiled", "tmx", "map"]
 
 [lib]
 name = "tiled"
 path = "src/lib.rs"
+
+[features]
+default = []
+serde = ["serde-crate"]
 
 [[example]]
 name = "example"
@@ -23,3 +27,4 @@ path = "examples/main.rs"
 base64  = "0.5.2"
 xml-rs  = "0.3.0"
 libflate = "0.1.18"
+serde-crate = { version = "*", optional = true, package = "serde" }
