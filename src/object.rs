@@ -12,7 +12,7 @@ pub struct ObjectGroup {
     pub opacity: f32,
     pub visible: bool,
     pub objects: Vec<Object>,
-    pub Color: Option<Color>,
+    pub color: Option<Color>,
     /**
      * Layer index is not preset for tile collision boxes
      */
@@ -30,7 +30,7 @@ impl ObjectGroup {
             optionals: [
                 ("opacity", opacity, |v:String| v.parse().ok()),
                 ("visible", visible, |v:String| v.parse().ok().map(|x:i32| x == 1)),
-                ("color", Color, |v:String| v.parse().ok()),
+                ("color", color, |v:String| v.parse().ok()),
                 ("name", name, |v:String| v.into()),
             ],
             required: [],
@@ -48,7 +48,7 @@ impl ObjectGroup {
             opacity: o.unwrap_or(1.0),
             visible: v.unwrap_or(true),
             objects: objects,
-            Color: c,
+            color: c,
             layer_index,
         })
     }
