@@ -1,6 +1,9 @@
 //! Integration with Amethyst assets
-use amethyst_assets::Format;
-use amethyst_error::{Error};
+use amethyst::{
+    assets::Format,
+    Error, error::ResultExt,
+};
+
 use crate::map::Map;
 use std::io::BufReader;
 
@@ -16,6 +19,6 @@ impl Format<Map> for TmxFormat
     fn import_simple(&self, bytes: Vec<u8>) -> Result<Map, Error> {
         let reader =
             BufReader::new(&*bytes);
-        Map::parse(reader).map_err(|e| amethyst_error::Error::new(e))
+        Map::parse(reader).map_err(|e| amethyst::Error::new(e))
     }
 }

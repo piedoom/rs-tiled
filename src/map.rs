@@ -16,7 +16,7 @@ use std::{
 use xml::{attribute::OwnedAttribute, reader::XmlEvent, EventReader};
 
 #[cfg(feature = "amethyst")]
-use specs::storage::{VecStorage, UnprotectedStorage};
+use specs::storage::{VecStorage};
 #[cfg(feature = "amethyst")]
 use amethyst_assets::{Asset, ProcessingState, Handle};
 
@@ -196,7 +196,7 @@ impl Asset for Map {
 
 #[cfg(feature = "amethyst")]
 impl From<Map> for Result<ProcessingState<Map>, amethyst_error::Error> {
-    fn from(map: Map)
+    fn from(_map: Map)
         -> Result<ProcessingState<Map>, amethyst_error::Error> {
             Ok(ProcessingState::Loaded(Map::default()))
     }
